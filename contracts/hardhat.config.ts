@@ -23,14 +23,9 @@ const config: HardhatUserConfig = {
     },
   },
   networks: {
-    mumbai: {
-      url: process.env.RPC_URL_MUMBAI || "",
+    hyperspace: {
+      url: process.env.RPC_URL_HYPERSPACE || "",
       accounts: accounts,
-    },
-  },
-  etherscan: {
-    apiKey: {
-      polygonMumbai: process.env.ETHERSCAN_API_KEY_MUMBAI || "",
     },
   },
 };
