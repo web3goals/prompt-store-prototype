@@ -4,7 +4,6 @@ pragma solidity ^0.8.9;
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
-import "./interfaces/PromptInterface.sol";
 
 /**
  * A contract that stores profiles.
@@ -14,23 +13,10 @@ contract Profile is ERC721URIStorage, Ownable {
 
     event URISet(uint256 indexed tokenId, string tokenURI);
 
-    address private _promptAddress;
     Counters.Counter private _counter;
     mapping(address => uint256) private _owners;
 
-    constructor(
-        address promptAddress
-    ) ERC721("Prompt Store - Profiles", "PSP") {
-        _promptAddress = promptAddress;
-    }
-
-    function setPromptAddress(address promptAddress) public onlyOwner {
-        _promptAddress = promptAddress;
-    }
-
-    function getPromptAddress() public view returns (address) {
-        return _promptAddress;
-    }
+    constructor() ERC721("Prompt Store - Profiles", "PSP") {}
 
     /**
      * Get token id by owner.
@@ -70,11 +56,6 @@ contract Profile is ERC721URIStorage, Ownable {
         else {
             _setURI(_owners[msg.sender], tokenURI);
         }
-        // Grant minter role in prompt contract
-        PromptInterface(_promptAddress).grantRole(
-            0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6,
-            msg.sender
-        );
     }
 
     /**

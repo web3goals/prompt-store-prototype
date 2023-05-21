@@ -11,9 +11,7 @@ async function main() {
   );
 
   // Deploy contract
-  const contract = await new Profile__factory(deployerWallet).deploy(
-    "0xc1Db4070da95988D1251775728a2A0d2edC6bEF4"
-  );
+  const contract = await new Profile__factory(deployerWallet).deploy();
   await contract.deployed();
   console.log(`✅ Contract deployed to ${contract.address}`);
   console.log(
