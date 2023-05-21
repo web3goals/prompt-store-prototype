@@ -16,17 +16,16 @@ export function addressToShortAddress(address: string): string {
 /**
  * Convert "ipfs://..." to "http://...".
  */
-export function ipfsUriToHttpUri(
-  ipfsUri?: string,
-  providerUri?: string
-): string {
-  if (!ipfsUri || !ipfsUri.startsWith("ipfs://")) {
+export function ipfsUriToHttpUri(ipfsUri?: string): string {
+  const cid = ipfsUri?.match(/(?<=ipfs:\/\/).*$/)?.[0];
+  if (!cid) {
     throw new Error(`Fail to converting IPFS URI to HTTP URI: ${ipfsUri}`);
   }
-  return ipfsUri.replace(
-    "ipfs://",
-    providerUri || "https://gateway.lighthouse.storage/ipfs/"
-  );
+  const cidParts = cid.split("/");
+  if (cidParts.length == 2) {
+    return `https://${cidParts[0]}.ipfs.sphn.link/${cidParts[1]}`;
+  }
+  return `https://${cidParts[0]}.ipfs.sphn.link`;
 }
 
 /**

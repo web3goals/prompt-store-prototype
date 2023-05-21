@@ -1,3 +1,4 @@
+import { upload } from "@spheron/browser-upload";
 import axios from "axios";
 import { ipfsUriToHttpUri } from "utils/converters";
 
@@ -7,45 +8,32 @@ import { ipfsUriToHttpUri } from "utils/converters";
 export default function useIpfs() {
   const ipfsUriPrefix = "ipfs://";
 
-  let uploadFileToIpfs = async function (file: any): Promise<{
+  const uploadFileToIpfs = async function (file: File): Promise<{
     cid: string;
     uri: string;
   }> {
-    // Prepare form data
-    const formData = new FormData();
-    formData.append("file", file);
-    // Make request
-    const response = await axios.post(
-      "https://node.lighthouse.storage/api/v0/add",
-      formData,
-      {
-        maxContentLength: Infinity,
-        maxBodyLength: Infinity,
-        headers: {
-          "Content-type": `multipart/form-data; boundary= ${Symbol().toString()}`,
-          Encryption: `${false}`,
-          "Mime-Type": file.type,
-          Authorization: "Bearer " + process.env.NEXT_PUBLIC_LIGHTHOUSE_API_KEY,
-        },
-      }
-    );
+    const { data } = await axios.get("/api/initiateUpload");
+    const uploadResult = await upload([file], { token: data.uploadToken });
     // Return result
-    const cid = response.data.Hash;
+    const cid =
+      uploadResult.protocolLink.match(/(?<=https:\/\/).*?(?=.ipfs)/)?.[0] +
+      "/" +
+      file.name;
     const uri = `${ipfsUriPrefix}${cid}`;
     return { cid, uri };
   };
 
-  let uploadJsonToIpfs = async function (json: object): Promise<{
+  const uploadJsonToIpfs = async function (json: object): Promise<{
     cid: string;
     uri: string;
   }> {
-    const file = new File([JSON.stringify(json)], "", {
+    const file = new File([JSON.stringify(json)], "data.json", {
       type: "text/plain",
     });
     return uploadFileToIpfs(file);
   };
 
-  let loadJsonFromIpfs = async function (uri: string): Promise<any> {
+  const loadJsonFromIpfs = async function (uri: string): Promise<any> {
     const response = await axios.get(ipfsUriToHttpUri(uri));
     if (response.data.errors) {
       throw new Error(
