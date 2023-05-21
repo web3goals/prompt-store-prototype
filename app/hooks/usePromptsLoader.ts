@@ -8,7 +8,7 @@ import useError from "./useError";
 /**
  * Load prompts from tableland.
  */
-export default function usePromptsLoader(): {
+export default function usePromptsLoader(args?: { minter?: string }): {
   prompts: PromptTablelandEntity[] | undefined;
 } {
   const { chain } = useNetwork();
@@ -18,9 +18,15 @@ export default function usePromptsLoader(): {
 
   useEffect(() => {
     setPromts(undefined);
+    // Define statement
+    let statement = `select%20%2A%20from%20${table}%20order%20by%20mintingTimestamp%20desc`;
+    if (args?.minter) {
+      statement = `select%20%2A%20from%20${table}%20where%20minter%3D%22${args.minter.toLowerCase()}%22%20order%20by%20mintingTimestamp%20desc`;
+    }
+    // Make request
     axios
       .get(
-        `https://testnets.tableland.network/api/v1/query?statement=select%20%2A%20from%20${table}%20order%20by%20mintingTimestamp%20desc`
+        `https://testnets.tableland.network/api/v1/query?statement=${statement}`
       )
       .then((data) => setPromts(data.data))
       .catch((error) => {
@@ -31,7 +37,7 @@ export default function usePromptsLoader(): {
         }
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [args?.minter]);
 
   return {
     prompts,

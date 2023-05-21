@@ -18,13 +18,11 @@ import {
   chainToSupportedChainPromptContractAddress,
 } from "@/utils/chains";
 import { MenuItem, Typography } from "@mui/material";
-import { ethers } from "ethers";
 import { Form, Formik } from "formik";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import {
   useAccount,
-  useContractEvent,
   useContractWrite,
   useNetwork,
   usePrepareContractWrite,
@@ -121,25 +119,18 @@ export default function CreatePrompt() {
   }, [submittedFormDataUri, contractWrite, isContractWriteLoading]);
 
   /**
-   * Listen contract events to open page of created prompt.
-   *
-   * TODO: Don't listen transfer event, redirect to prompt list?
+   * Handle transaction success to show success message.
    */
-  useContractEvent({
-    address: chainToSupportedChainPromptContractAddress(chain),
-    abi: promptContractAbi,
-    eventName: "Transfer",
-    listener(log) {
-      if (
-        log[0].args.from === ethers.constants.AddressZero &&
-        log[0].args.to === address
-      ) {
-        showToastSuccess("Prompt is created!");
-        setIsFormSubmitting(false);
-        router.push(`/prompts/${log[0].args.tokenId.toString()}`);
-      }
-    },
-  });
+  useEffect(() => {
+    if (isTransactionSuccess) {
+      showToastSuccess(
+        "Prompt is created and will appear soon on your account page"
+      );
+      router.push(`/accounts/${address}`);
+      setIsFormSubmitting(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isTransactionSuccess]);
 
   /**
    * Form states

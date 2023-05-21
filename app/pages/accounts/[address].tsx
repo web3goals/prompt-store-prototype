@@ -1,4 +1,6 @@
 import AccountProfile from "@/components/account/AccountProfile";
+import AccountPrompts from "@/components/account/AccountPrompts";
+import { ThickDivider } from "@/components/styled";
 import Layout from "components/layout";
 import { useRouter } from "next/router";
 
@@ -11,7 +13,13 @@ export default function Account() {
 
   return (
     <Layout>
-      {address && <AccountProfile address={address.toString()} />}
+      {address && (
+        <>
+          <AccountProfile address={address.toString()} />
+          <ThickDivider sx={{ mt: 8, mb: 8 }} />
+          <AccountPrompts address={address.toString()} />
+        </>
+      )}
     </Layout>
   );
 }
