@@ -16,9 +16,7 @@ contract Prompt is ERC721URIStorage, Ownable {
 
     event URISet(uint256 indexed tokenId, string tokenURI);
 
-    address private _promptAddress;
     Counters.Counter private _counter;
-    mapping(address => uint256) private _owners;
     uint256 public _tableId;
     string private constant _TABLE_PREFIX = "prompt_table";
 
@@ -35,25 +33,6 @@ contract Prompt is ERC721URIStorage, Ownable {
     }
 
     /**
-     * Get token id by owner.
-     */
-    function getTokenId(address owner) external view returns (uint) {
-        return _owners[owner];
-    }
-
-    /**
-     * Get uri by owner.
-     */
-    function getURI(address owner) external view returns (string memory) {
-        uint256 tokenId = _owners[owner];
-        if (_exists(tokenId)) {
-            return tokenURI(tokenId);
-        } else {
-            return "";
-        }
-    }
-
-    /**
      * Mint token with specified uri.
      */
     function mint(string memory tokenURI) public {
@@ -62,9 +41,9 @@ contract Prompt is ERC721URIStorage, Ownable {
         // Mint token
         uint256 tokenId = _counter.current();
         _mint(msg.sender, tokenId);
-        _owners[msg.sender] = tokenId;
         // Set URI
-        _setURI(tokenId, tokenURI);
+        _setTokenURI(tokenId, tokenURI);
+        emit URISet(tokenId, tokenURI);
         // Add token to table
         TablelandDeployments.get().mutate(
             address(this),
@@ -82,13 +61,5 @@ contract Prompt is ERC721URIStorage, Ownable {
                 )
             )
         );
-    }
-
-    /**
-     * Set uri.
-     */
-    function _setURI(uint256 tokenId, string memory tokenURI) private {
-        _setTokenURI(tokenId, tokenURI);
-        emit URISet(tokenId, tokenURI);
     }
 }
