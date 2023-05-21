@@ -25,6 +25,7 @@ contract Prompt is ERC721URIStorage, Ownable {
             address(this),
             SQLHelpers.toCreateFromSchema(
                 "id integer primary key,"
+                "minter text,"
                 "mintingTimestamp integer,"
                 "uri text",
                 _TABLE_PREFIX
@@ -51,9 +52,11 @@ contract Prompt is ERC721URIStorage, Ownable {
             SQLHelpers.toInsert(
                 _TABLE_PREFIX,
                 _tableId,
-                "id,mintingTimestamp,uri",
+                "id,minter,mintingTimestamp,uri",
                 string.concat(
                     Strings.toString(tokenId),
+                    ",",
+                    SQLHelpers.quote(Strings.toHexString(msg.sender)),
                     ",",
                     Strings.toString(block.timestamp),
                     ",",
