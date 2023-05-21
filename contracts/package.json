@@ -6,7 +6,6 @@
     "hardhat": "^2.14.0"
   },
   "dependencies": {
-    "@infura/sdk": "^2.3.10",
     "@openzeppelin/contracts": "^4.8.3",
     "dotenv": "^16.0.3"
   }
