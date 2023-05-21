@@ -2,17 +2,10 @@ import EntityList from "@/components/entity/EntityList";
 import Layout from "@/components/layout";
 import PromptCard from "@/components/prompt/PromptCard";
 import { LargeLoadingButton } from "@/components/styled";
-import TokenDataEntity from "@/entities/TokenDataEntity";
-import useError from "@/hooks/useError";
-import useTokenDataLoader from "@/hooks/useTokenDataLoader";
-import {
-  chainToSupportedChainId,
-  chainToSupportedChainPromptContractAddress,
-} from "@/utils/chains";
+import PromptTablelandEntity from "@/entities/tableland/PromptTablelandEntity";
+import usePromptsLoader from "@/hooks/usePromptsLoader";
 import { Box, Container, Stack, SxProps, Typography } from "@mui/material";
 import Image from "next/image";
-import { useEffect, useState } from "react";
-import { useNetwork } from "wagmi";
 
 /**
  * Landing page.
@@ -98,20 +91,7 @@ function QuoteSection(props: { sx?: SxProps }) {
 }
 
 function PromptsSection(props: { sx?: SxProps }) {
-  const { chain } = useNetwork();
-  const { handleError } = useError();
-  const { getTokenDataList } = useTokenDataLoader();
-  const [prompts, setPrompts] = useState<TokenDataEntity[] | undefined>();
-
-  useEffect(() => {
-    getTokenDataList(
-      chainToSupportedChainId(chain)!,
-      chainToSupportedChainPromptContractAddress(chain)!
-    )
-      .then((tokenDataList) => setPrompts(tokenDataList))
-      .catch((error) => handleError(error, true));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const { prompts } = usePromptsLoader();
 
   return (
     <Container
@@ -141,8 +121,8 @@ function PromptsSection(props: { sx?: SxProps }) {
       </Typography>
       <EntityList
         entities={prompts}
-        renderEntityCard={(prompt, index) => (
-          <PromptCard key={index} prompt={prompt} />
+        renderEntityCard={(prompt: PromptTablelandEntity, index) => (
+          <PromptCard key={index} id={prompt.id} uri={prompt.uri} />
         )}
         noEntitiesText="😐 no prompts"
         sx={{ mt: 4 }}

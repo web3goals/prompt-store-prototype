@@ -4,7 +4,7 @@ import { Box, SxProps, Tooltip, Typography } from "@mui/material";
  * A component with account's reputation.
  */
 export default function AccountReputation(props: {
-  soldPrompts: number;
+  sales: number;
   small?: boolean;
   sx?: SxProps;
 }) {
@@ -16,7 +16,7 @@ export default function AccountReputation(props: {
           fontWeight={700}
           sx={{ mr: 1.5, cursor: "help" }}
         >
-          🤖 {props.soldPrompts}
+          🤖 {props.sales}
         </Typography>
       </Tooltip>
     </Box>

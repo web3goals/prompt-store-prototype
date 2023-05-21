@@ -69,11 +69,8 @@ export default function CreatePrompt() {
   const { config: contractPrepareConfig } = usePrepareContractWrite({
     address: chainToSupportedChainPromptContractAddress(chain),
     abi: promptContractAbi,
-    functionName: "mintWithTokenURI",
-    args: [
-      address || ethers.constants.AddressZero,
-      submittedFormDataUri || "ipfs://...",
-    ],
+    functionName: "mint",
+    args: [submittedFormDataUri],
     chainId: chainToSupportedChainId(chain),
     onError(error: any) {
       showToastError(error);
@@ -125,6 +122,8 @@ export default function CreatePrompt() {
 
   /**
    * Listen contract events to open page of created prompt.
+   *
+   * TODO: Don't listen transfer event, redirect to prompt list?
    */
   useContractEvent({
     address: chainToSupportedChainPromptContractAddress(chain),

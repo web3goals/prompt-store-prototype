@@ -11,7 +11,7 @@ import AccountReputation from "./AccountReputation";
 export default function AccountCard(props: {
   address: string;
   profileUriData: ProfileUriDataEntity | undefined;
-  soldPrompts: number;
+  sales: number;
   sx?: SxProps;
 }) {
   return (
@@ -36,11 +36,7 @@ export default function AccountCard(props: {
             {props.profileUriData?.attributes[1].value}
           </Typography>
         )}
-        <AccountReputation
-          soldPrompts={props.soldPrompts}
-          small
-          sx={{ mt: 1 }}
-        />
+        <AccountReputation sales={props.sales} small sx={{ mt: 1 }} />
       </Box>
     </CardBox>
   );

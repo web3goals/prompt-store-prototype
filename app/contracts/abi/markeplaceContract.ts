@@ -1,5 +1,21 @@
 export const markeplaceContractAbi = [
   {
+    inputs: [],
+    stateMutability: "nonpayable",
+    type: "constructor",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "chainid",
+        type: "uint256",
+      },
+    ],
+    name: "ChainNotSupported",
+    type: "error",
+  },
+  {
     anonymous: false,
     inputs: [
       {
@@ -60,6 +76,19 @@ export const markeplaceContractAbi = [
     ],
     name: "OwnershipTransferred",
     type: "event",
+  },
+  {
+    inputs: [],
+    name: "_tableId",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
   },
   {
     inputs: [
@@ -210,25 +239,38 @@ export const markeplaceContractAbi = [
     type: "function",
   },
   {
-    inputs: [],
-    name: "getSellers",
+    inputs: [
+      {
+        internalType: "address",
+        name: "sellerAddress",
+        type: "address",
+      },
+    ],
+    name: "getSales",
     outputs: [
       {
-        components: [
-          {
-            internalType: "address",
-            name: "sellerAddress",
-            type: "address",
-          },
-          {
-            internalType: "uint256",
-            name: "soldListings",
-            type: "uint256",
-          },
-        ],
-        internalType: "struct Marketplace.Seller[]",
+        internalType: "uint256",
         name: "",
-        type: "tuple[]",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "sellerAddress",
+        type: "address",
+      },
+    ],
+    name: "isSellerExists",
+    outputs: [
+      {
+        internalType: "bool",
+        name: "",
+        type: "bool",
       },
     ],
     stateMutability: "view",

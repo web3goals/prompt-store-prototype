@@ -1,5 +1,5 @@
 import { markeplaceContractAbi } from "@/contracts/abi/markeplaceContract";
-import TokenListingEntity from "@/entities/TokenListingEntity";
+import ListingEntity from "@/entities/ListingEntity";
 import {
   chainToSupportedChainMarketplaceContractAddress,
   chainToSupportedChainPromptContractAddress,
@@ -10,16 +10,14 @@ import { useContractRead, useNetwork } from "wagmi";
 import useError from "./useError";
 
 /**
- * Load token listing.
+ * Load listing from marketplace.
  */
-export default function useTokenListingLoader(id: string | undefined): {
-  tokenListing: TokenListingEntity | undefined;
+export default function useListingLoader(id: string | undefined): {
+  listing: ListingEntity | undefined;
 } {
   const { chain } = useNetwork();
   const { handleError } = useError();
-  const [tokenListing, setTokenListing] = useState<
-    TokenListingEntity | undefined
-  >();
+  const [listing, setListing] = useState<ListingEntity | undefined>();
 
   /**
    * Contract states to get listing
@@ -43,13 +41,13 @@ export default function useTokenListingLoader(id: string | undefined): {
    * Check listings to define actual sell price
    */
   useEffect(() => {
-    setTokenListing(undefined);
+    setListing(undefined);
     if (
       listings &&
       listings.length > 0 &&
       listings[listings.length - 1].owner === ethers.constants.AddressZero
     ) {
-      setTokenListing({
+      setListing({
         price: ethers.utils.formatEther(
           listings[listings.length - 1].listPrice
         ),
@@ -58,5 +56,5 @@ export default function useTokenListingLoader(id: string | undefined): {
     }
   }, [listings]);
 
-  return { tokenListing };
+  return { listing };
 }

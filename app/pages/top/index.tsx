@@ -1,48 +1,22 @@
 import AccountCard from "@/components/account/AccountCard";
 import EntityList from "@/components/entity/EntityList";
-import { markeplaceContractAbi } from "@/contracts/abi/markeplaceContract";
 import { profileContractAbi } from "@/contracts/abi/profileContract";
+import SellerTablelandEntity from "@/entities/tableland/SellerTablelandEntity";
 import ProfileUriDataEntity from "@/entities/uri/ProfileUriDataEntity";
+import useSellersLoader from "@/hooks/useSellersLoader";
 import useUriDataLoader from "@/hooks/useUriDataLoader";
-import {
-  chainToSupportedChainMarketplaceContractAddress,
-  chainToSupportedChainProfileContractAddress,
-} from "@/utils/chains";
+import { chainToSupportedChainProfileContractAddress } from "@/utils/chains";
 import { stringToAddress } from "@/utils/converters";
 import { SxProps, Typography } from "@mui/material";
 import Layout from "components/layout";
 import { ethers } from "ethers";
-import { useEffect, useState } from "react";
 import { useContractRead, useNetwork } from "wagmi";
 
 /**
  * Page with the top authors.
  */
 export default function TopAuthors() {
-  const { chain } = useNetwork();
-  const [topAuthors, setTopAuthors] = useState<any[] | undefined>();
-
-  /**
-   * Define sellers
-   */
-  const { data: sellers } = useContractRead({
-    address: chainToSupportedChainMarketplaceContractAddress(chain),
-    abi: markeplaceContractAbi,
-    functionName: "getSellers",
-  });
-
-  /**
-   * Define top authors
-   */
-  useEffect(() => {
-    if (sellers) {
-      setTopAuthors(
-        [...sellers].sort((a, b) => Number(b.soldListings - a.soldListings))
-      );
-    } else {
-      setTopAuthors(undefined);
-    }
-  }, [sellers]);
+  const { sellers } = useSellersLoader();
 
   return (
     <Layout>
@@ -53,12 +27,12 @@ export default function TopAuthors() {
         who created the most purchasable clues
       </Typography>
       <EntityList
-        entities={topAuthors}
-        renderEntityCard={(topAuthor, index) => (
+        entities={sellers}
+        renderEntityCard={(seller: SellerTablelandEntity, index) => (
           <TopAuthorCard
             key={index}
-            address={topAuthor.sellerAddress}
-            soldPrompts={Number(topAuthor.soldListings)}
+            address={seller.id}
+            sales={Number(seller.sales)}
           />
         )}
         noEntitiesText="😐 no authors"
@@ -70,7 +44,7 @@ export default function TopAuthors() {
 
 function TopAuthorCard(props: {
   address: string;
-  soldPrompts: number;
+  sales: number;
   sx?: SxProps;
 }) {
   const { chain } = useNetwork();
@@ -91,7 +65,7 @@ function TopAuthorCard(props: {
     <AccountCard
       address={props.address}
       profileUriData={profileUriData}
-      soldPrompts={props.soldPrompts}
+      sales={props.sales}
     />
   );
 }

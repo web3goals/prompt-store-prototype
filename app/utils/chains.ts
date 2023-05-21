@@ -1,10 +1,14 @@
-import { Chain, polygonMumbai } from "wagmi/chains";
+import { Chain, filecoinHyperspace } from "wagmi/chains";
 import { stringToAddress } from "./converters";
 
 interface ChainConfig {
   chain: Chain;
   contractAddresses: {
     profile: string;
+    prompt: string;
+    marketplace: string;
+  };
+  tablelandTables: {
     prompt: string;
     marketplace: string;
   };
@@ -16,17 +20,24 @@ interface ChainConfig {
 export function getSupportedChainConfigs(): ChainConfig[] {
   const chainConfigs: ChainConfig[] = [];
   if (
-    process.env.NEXT_PUBLIC_MUMBAI_PROFILE_CONTRACT_ADDRESS &&
-    process.env.NEXT_PUBLIC_MUMBAI_PROMPT_CONTRACT_ADDRESS &&
-    process.env.NEXT_PUBLIC_MUMBAI_MARKETPLACE_CONTRACT_ADDRESS
+    process.env.NEXT_PUBLIC_HYPERSPACE_PROFILE_CONTRACT_ADDRESS &&
+    process.env.NEXT_PUBLIC_HYPERSPACE_PROMPT_CONTRACT_ADDRESS &&
+    process.env.NEXT_PUBLIC_HYPERSPACE_MARKETPLACE_CONTRACT_ADDRESS &&
+    process.env.NEXT_PUBLIC_HYPERSPACE_PROMPT_TABLELAND_TABLE &&
+    process.env.NEXT_PUBLIC_HYPERSPACE_MARKETPLACE_TABLELAND_TABLE
   ) {
     chainConfigs.push({
-      chain: polygonMumbai,
+      chain: filecoinHyperspace,
       contractAddresses: {
-        profile: process.env.NEXT_PUBLIC_MUMBAI_PROFILE_CONTRACT_ADDRESS,
-        prompt: process.env.NEXT_PUBLIC_MUMBAI_PROMPT_CONTRACT_ADDRESS,
+        profile: process.env.NEXT_PUBLIC_HYPERSPACE_PROFILE_CONTRACT_ADDRESS,
+        prompt: process.env.NEXT_PUBLIC_HYPERSPACE_PROMPT_CONTRACT_ADDRESS,
         marketplace:
-          process.env.NEXT_PUBLIC_MUMBAI_MARKETPLACE_CONTRACT_ADDRESS,
+          process.env.NEXT_PUBLIC_HYPERSPACE_MARKETPLACE_CONTRACT_ADDRESS,
+      },
+      tablelandTables: {
+        prompt: process.env.NEXT_PUBLIC_HYPERSPACE_PROMPT_TABLELAND_TABLE,
+        marketplace:
+          process.env.NEXT_PUBLIC_HYPERSPACE_MARKETPLACE_TABLELAND_TABLE,
       },
     });
   }
@@ -115,4 +126,22 @@ export function chainToSupportedChainMarketplaceContractAddress(
   return stringToAddress(
     chainToSupportedChainConfig(chain).contractAddresses.marketplace
   );
+}
+
+/**
+ * Return prompt tableland table of specified chain if it supported, otherwise return value from default supported chain.
+ */
+export function chainToSupportedChainPromptTablelandTable(
+  chain: Chain | undefined
+): string | undefined {
+  return chainToSupportedChainConfig(chain).tablelandTables.prompt;
+}
+
+/**
+ * Return marketplace tableland table of specified chain if it supported, otherwise return value from default supported chain.
+ */
+export function chainToSupportedChainMarketplaceTablelandTable(
+  chain: Chain | undefined
+): string | undefined {
+  return chainToSupportedChainConfig(chain).tablelandTables.marketplace;
 }

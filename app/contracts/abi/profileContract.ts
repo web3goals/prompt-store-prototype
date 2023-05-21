@@ -1,12 +1,6 @@
 export const profileContractAbi = [
   {
-    inputs: [
-      {
-        internalType: "address",
-        name: "promptAddress",
-        type: "address",
-      },
-    ],
+    inputs: [],
     stateMutability: "nonpayable",
     type: "constructor",
   },
@@ -169,19 +163,6 @@ export const profileContractAbi = [
       },
     ],
     name: "getApproved",
-    outputs: [
-      {
-        internalType: "address",
-        name: "",
-        type: "address",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "getPromptAddress",
     outputs: [
       {
         internalType: "address",
@@ -371,19 +352,6 @@ export const profileContractAbi = [
       },
     ],
     name: "setApprovalForAll",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "promptAddress",
-        type: "address",
-      },
-    ],
-    name: "setPromptAddress",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",

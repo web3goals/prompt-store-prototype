@@ -1,8 +1,7 @@
 import { profileContractAbi } from "@/contracts/abi/profileContract";
-import TokenDataEntity from "@/entities/TokenDataEntity";
 import ProfileUriDataEntity from "@/entities/uri/ProfileUriDataEntity";
 import PromptUriDataEntity from "@/entities/uri/PromptUriDataEntity";
-import useTokenListingLoader from "@/hooks/useTokenListingLoader";
+import useListingLoader from "@/hooks/useListingLoader";
 import useUriDataLoader from "@/hooks/useUriDataLoader";
 import {
   chainToSupportedChainNativeCurrencySymbol,
@@ -30,12 +29,18 @@ import { CardBox } from "../styled";
  * A component with a prompt card.
  */
 export default function PromptCard(props: {
-  prompt: TokenDataEntity;
+  id: number;
+  uri: string;
   sx?: SxProps;
 }) {
   const { chain } = useNetwork();
 
-  const promptUriData = props.prompt.metadata as PromptUriDataEntity;
+  /**
+   * Define prompt uri data
+   */
+  const { data: promptUriData } = useUriDataLoader<PromptUriDataEntity>(
+    props.uri
+  );
 
   /**
    * Define author data
@@ -54,9 +59,7 @@ export default function PromptCard(props: {
   /**
    * Define listing
    */
-  const { tokenListing: promptListing } = useTokenListingLoader(
-    props.prompt.id
-  );
+  const { listing: promptListing } = useListingLoader(props.id.toString());
 
   if (!promptUriData) {
     return <></>;
@@ -78,7 +81,7 @@ export default function PromptCard(props: {
           accountProfileUriData={authorProfileUriData}
         />
         {/* Title */}
-        <Link href={`/prompts/${props.prompt.id}`} passHref legacyBehavior>
+        <Link href={`/prompts/${props.id}`} passHref legacyBehavior>
           <MuiLink fontWeight={700} mt={1}>
             {promptUriData.title}
           </MuiLink>
@@ -107,7 +110,7 @@ export default function PromptCard(props: {
             {timestampToLocaleDateString(promptUriData.created, true)}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Prompt #{props.prompt.id}
+            Prompt #{props.id}
           </Typography>
         </Stack>
       </Box>
