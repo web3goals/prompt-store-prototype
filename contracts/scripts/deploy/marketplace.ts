@@ -4,14 +4,12 @@ import { Marketplace__factory } from "../../typechain-types";
 async function main() {
   console.log("👟 Start to deploy marketplace contract");
 
-  // Define deployer wallet
-  const deployerWallet = new ethers.Wallet(
-    process.env.PRIVATE_KEY_1 || "",
-    ethers.provider
-  );
+  // Define contract deployer
+  const accounts = await ethers.getSigners();
+  const deployer = accounts[0];
 
   // Deploy contract
-  const contract = await new Marketplace__factory(deployerWallet).deploy();
+  const contract = await new Marketplace__factory(deployer).deploy();
   await contract.deployed();
   console.log(`✅ Contract deployed to ${contract.address}`);
 }
