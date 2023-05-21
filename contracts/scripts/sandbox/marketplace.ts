@@ -1,73 +1,63 @@
 import { ethers } from "hardhat";
-import { Marketplace__factory } from "../../typechain-types";
-import { promptContractAbi } from "../helpers/abi/promptContract";
+import { Marketplace__factory, Prompt__factory } from "../../typechain-types";
 
 async function main() {
   console.log("👟 Start sandbox");
 
   // Init accounts
-  const accountOneWallet = new ethers.Wallet(
-    process.env.PRIVATE_KEY_1 || "",
-    ethers.provider
-  );
-  const accountTwoWallet = new ethers.Wallet(
-    process.env.PRIVATE_KEY_2 || "",
-    ethers.provider
-  );
-
-  // Define params
-  const promptContractAddress = "0xc1Db4070da95988D1251775728a2A0d2edC6bEF4";
-  const marketplaceContractAddress =
-    "0x90E4429df67cBc37C9D06d8c4811d13589e8b4d0";
-  const marketplaceId = 1;
-  const tokenId = 1;
+  const accounts = await ethers.getSigners();
+  const accountOne = accounts[0];
+  const accountTwo = accounts[1];
 
   // Init contracts
-  const promptContract = new ethers.Contract(
-    promptContractAddress,
-    promptContractAbi
-  );
+  const promptContractAddress = "";
+  const marketplaceContractAddress = "";
+  const promptContract = new Prompt__factory().attach(promptContractAddress);
   const marketplaceContract = new Marketplace__factory().attach(
     marketplaceContractAddress
   );
 
-  // Approve the marketplace address as a spender
-  const approval = await promptContract
-    .connect(accountOneWallet)
-    .approve(marketplaceContract.address, tokenId);
-  console.log("approval function call Tx Hash:", approval.hash);
-  await approval.wait();
+  // Define params
+  const marketplaceId = 1;
+  const tokenId = 1;
 
-  // List the prompt onto the marketplace
-  const createListing = await marketplaceContract
-    .connect(accountOneWallet)
+  // Make transactions
+  let tx;
+
+  tx = await marketplaceContract.connect(accountOne)._tableId();
+  console.log("_tableId:", tx);
+
+  tx = await promptContract
+    .connect(accountOne)
+    .approve(marketplaceContract.address, tokenId);
+  console.log("approve tx hash:", tx.hash);
+  await tx.wait();
+
+  tx = await marketplaceContract
+    .connect(accountOne)
     .createListing(
       tokenId,
       promptContract.address,
       ethers.utils.parseEther("0.01")
     );
-  console.log("createListing function call Tx Hash:", createListing.hash);
-  await createListing.wait();
+  console.log("createListing tx hash:", tx.hash);
+  await tx.wait();
 
-  // Buy the prompt by account two
-  const buyPrompt = await marketplaceContract
-    .connect(accountTwoWallet)
+  tx = await marketplaceContract
+    .connect(accountTwo)
     .buyListing(marketplaceId, promptContract.address, {
       value: ethers.utils.parseEther("0.01"),
     });
-  console.log("buyPrompt function call Tx Hash:", buyPrompt.hash);
-  await buyPrompt.wait();
+  console.log("buyListing tx hash:", tx.hash);
+  await tx.wait();
 
-  console.log(
-    "Token owner:",
-    await promptContract.connect(accountOneWallet).ownerOf(tokenId)
-  );
-  console.log(
-    "Token listings:",
-    await marketplaceContract
-      .connect(accountOneWallet)
-      .getListings(tokenId, promptContract.address)
-  );
+  tx = await promptContract.connect(accountOne).ownerOf(tokenId);
+  console.log("ownerOf:", tx);
+
+  tx = await marketplaceContract
+    .connect(accountOne)
+    .getListings(tokenId, promptContract.address);
+  console.log("getListings:", tx);
 }
 
 main().catch((error) => {

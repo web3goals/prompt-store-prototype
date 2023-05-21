@@ -5,6 +5,9 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
+import "@tableland/evm/contracts/utils/TablelandDeployments.sol";
+import "@tableland/evm/contracts/utils/SQLHelpers.sol";
 
 /**
  * A contract to sell and buy items.
@@ -15,7 +18,20 @@ contract Marketplace is ReentrancyGuard, Ownable {
     Counters.Counter private totalMarketplaceItemsSold;
 
     mapping(uint => Listing) private marketplaceIdToListingItem;
-    Seller[] private sellers;
+
+    uint256 public _tableId;
+    string private constant _TABLE_PREFIX = "marketplace_table";
+
+    constructor() {
+        _tableId = TablelandDeployments.get().create(
+            address(this),
+            SQLHelpers.toCreateFromSchema(
+                "id text primary key,"
+                "sales integer",
+                _TABLE_PREFIX
+            )
+        );
+    }
 
     struct Listing {
         uint marketplaceId;
@@ -24,11 +40,6 @@ contract Marketplace is ReentrancyGuard, Ownable {
         address payable seller;
         address payable owner;
         uint listPrice;
-    }
-
-    struct Seller {
-        address sellerAddress;
-        uint soldListings;
     }
 
     event ListingCreated(
@@ -46,6 +57,9 @@ contract Marketplace is ReentrancyGuard, Ownable {
         uint price
     ) public nonReentrant {
         require(price > 0, "List price must be 1 wei >=");
+        // Save caller status
+        bool isCallerFirstListing = !isSellerExists(msg.sender);
+        // Create listing
         marketplaceIds.increment();
         uint marketplaceItemId = marketplaceIds.current();
         marketplaceIdToListingItem[marketplaceItemId] = Listing(
@@ -65,9 +79,22 @@ contract Marketplace is ReentrancyGuard, Ownable {
             address(0),
             price
         );
-        if (!isSellerExists(msg.sender)) {
-            Seller memory seller = Seller(msg.sender, 0);
-            sellers.push(seller);
+        // Add seller to table
+        if (isCallerFirstListing) {
+            TablelandDeployments.get().mutate(
+                address(this),
+                _tableId,
+                SQLHelpers.toInsert(
+                    _TABLE_PREFIX,
+                    _tableId,
+                    "id,sales",
+                    string.concat(
+                        SQLHelpers.quote(Strings.toHexString(msg.sender)),
+                        ",",
+                        Strings.toString(0)
+                    )
+                )
+            );
         }
     }
 
@@ -89,14 +116,26 @@ contract Marketplace is ReentrancyGuard, Ownable {
             msg.sender
         );
         totalMarketplaceItemsSold.increment();
-        for (uint i = 0; i < sellers.length; i++) {
-            if (
-                sellers[i].sellerAddress ==
-                marketplaceIdToListingItem[marketplaceItemId].seller
-            ) {
-                sellers[i].soldListings++;
-            }
-        }
+        // Update seller in table
+        string memory setters = string.concat(
+            "sales=",
+            Strings.toString(
+                getSales(marketplaceIdToListingItem[marketplaceItemId].seller)
+            )
+        );
+        string memory filters = string.concat(
+            "id=",
+            SQLHelpers.quote(
+                Strings.toHexString(
+                    marketplaceIdToListingItem[marketplaceItemId].seller
+                )
+            )
+        );
+        TablelandDeployments.get().mutate(
+            address(this),
+            _tableId,
+            SQLHelpers.toUpdate(_TABLE_PREFIX, _tableId, setters, filters)
+        );
     }
 
     function getListing(
@@ -139,15 +178,22 @@ contract Marketplace is ReentrancyGuard, Ownable {
         return items;
     }
 
-    function getSellers() public view returns (Seller[] memory) {
-        return sellers;
+    function getSales(address sellerAddress) public view returns (uint) {
+        uint sales = 0;
+        for (uint i = 1; i <= marketplaceIds.current(); i++) {
+            if (
+                marketplaceIdToListingItem[i].seller == sellerAddress &&
+                marketplaceIdToListingItem[i].owner != address(0)
+            ) {
+                sales++;
+            }
+        }
+        return sales;
     }
 
-    function isSellerExists(
-        address sellerAddress
-    ) internal view returns (bool) {
-        for (uint i = 0; i < sellers.length; i++) {
-            if (sellers[i].sellerAddress == sellerAddress) {
+    function isSellerExists(address sellerAddress) public view returns (bool) {
+        for (uint i = 1; i <= marketplaceIds.current(); i++) {
+            if (marketplaceIdToListingItem[i].seller == sellerAddress) {
                 return true;
             }
         }
