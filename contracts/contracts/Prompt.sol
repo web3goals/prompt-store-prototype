@@ -4,6 +4,9 @@ pragma solidity ^0.8.9;
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
+import "@tableland/evm/contracts/utils/TablelandDeployments.sol";
+import "@tableland/evm/contracts/utils/SQLHelpers.sol";
 
 /**
  * A contract that stores prompts.
@@ -16,8 +19,20 @@ contract Prompt is ERC721URIStorage, Ownable {
     address private _promptAddress;
     Counters.Counter private _counter;
     mapping(address => uint256) private _owners;
+    uint256 public _tableId;
+    string private constant _TABLE_PREFIX = "prompt_table";
 
-    constructor() ERC721("Prompt Store - Prompts", "PSP") {}
+    constructor() ERC721("Prompt Store - Prompts", "PSP") {
+        _tableId = TablelandDeployments.get().create(
+            address(this),
+            SQLHelpers.toCreateFromSchema(
+                "id integer primary key,"
+                "mintingTimestamp integer,"
+                "uri text",
+                _TABLE_PREFIX
+            )
+        );
+    }
 
     /**
      * Get token id by owner.
@@ -39,24 +54,34 @@ contract Prompt is ERC721URIStorage, Ownable {
     }
 
     /**
-     * Set uri for sender's token.
+     * Mint token with specified uri.
      */
-    function setURI(string memory tokenURI) public {
-        // Mint token if sender does not have it yet
-        if (_owners[msg.sender] == 0) {
-            // Update counter
-            _counter.increment();
-            // Mint token
-            uint256 tokenId = _counter.current();
-            _mint(msg.sender, tokenId);
-            _owners[msg.sender] = tokenId;
-            // Set URI
-            _setURI(tokenId, tokenURI);
-        }
-        // Set URI if sender already have token
-        else {
-            _setURI(_owners[msg.sender], tokenURI);
-        }
+    function mint(string memory tokenURI) public {
+        // Update counter
+        _counter.increment();
+        // Mint token
+        uint256 tokenId = _counter.current();
+        _mint(msg.sender, tokenId);
+        _owners[msg.sender] = tokenId;
+        // Set URI
+        _setURI(tokenId, tokenURI);
+        // Add token to table
+        TablelandDeployments.get().mutate(
+            address(this),
+            _tableId,
+            SQLHelpers.toInsert(
+                _TABLE_PREFIX,
+                _tableId,
+                "id,mintingTimestamp,uri",
+                string.concat(
+                    Strings.toString(tokenId),
+                    ",",
+                    Strings.toString(block.timestamp),
+                    ",",
+                    SQLHelpers.quote(tokenURI)
+                )
+            )
+        );
     }
 
     /**
