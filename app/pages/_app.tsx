@@ -22,7 +22,7 @@ const { chains, publicClient, webSocketPublicClient } = configureChains(
 );
 
 const { connectors } = getDefaultWallets({
-  appName: "Prompt Marketplace",
+  appName: "Prompt Store",
   chains,
 });
 

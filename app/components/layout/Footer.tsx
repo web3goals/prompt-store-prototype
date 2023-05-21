@@ -29,7 +29,7 @@ function Copyright(props: { sx?: SxProps }) {
         fontWeight={700}
         textAlign="center"
       >
-        Prompt Marketplace © 2023
+        Prompt Store © 2023
       </Typography>
       <Typography
         color="primary.contrastText"

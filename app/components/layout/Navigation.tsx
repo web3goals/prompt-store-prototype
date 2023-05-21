@@ -50,7 +50,7 @@ function Logo(props: { sx?: SxProps }) {
           fontWeight={700}
           display={{ xs: "none", md: "flex" }}
         >
-          🤖 Prompt Marketplace
+          🤖 Prompt Store
         </MuiLink>
       </Link>
       <Link href="/" passHref legacyBehavior>
@@ -60,7 +60,7 @@ function Logo(props: { sx?: SxProps }) {
           fontWeight={700}
           display={{ xs: "flex", md: "none" }}
         >
-          🤖 PM
+          🤖 PS
         </MuiLink>
       </Link>
     </Box>

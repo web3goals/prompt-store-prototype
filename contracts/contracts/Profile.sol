@@ -20,7 +20,7 @@ contract Profile is ERC721URIStorage, Ownable {
 
     constructor(
         address promptAddress
-    ) ERC721("Prompt Marketplace - Profiles", "PMP") {
+    ) ERC721("Prompt Store - Profiles", "PSP") {
         _promptAddress = promptAddress;
     }
 

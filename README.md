@@ -1,4 +1,4 @@
-# 🤖 Prompt Marketplace
+# 🤖 Prompt Store
 
 ## ✨ About
 
