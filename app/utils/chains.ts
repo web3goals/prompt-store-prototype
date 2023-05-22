@@ -12,6 +12,9 @@ interface ChainConfig {
     prompt: string;
     marketplace: string;
   };
+  litProtocol: {
+    chain: string;
+  };
 }
 
 /**
@@ -24,7 +27,8 @@ export function getSupportedChainConfigs(): ChainConfig[] {
     process.env.NEXT_PUBLIC_HYPERSPACE_PROMPT_CONTRACT_ADDRESS &&
     process.env.NEXT_PUBLIC_HYPERSPACE_MARKETPLACE_CONTRACT_ADDRESS &&
     process.env.NEXT_PUBLIC_HYPERSPACE_PROMPT_TABLELAND_TABLE &&
-    process.env.NEXT_PUBLIC_HYPERSPACE_MARKETPLACE_TABLELAND_TABLE
+    process.env.NEXT_PUBLIC_HYPERSPACE_MARKETPLACE_TABLELAND_TABLE &&
+    process.env.NEXT_PUBLIC_HYPERSPACE_LIT_PROTOCOL_CHAIN
   ) {
     chainConfigs.push({
       chain: filecoinHyperspace,
@@ -38,6 +42,9 @@ export function getSupportedChainConfigs(): ChainConfig[] {
         prompt: process.env.NEXT_PUBLIC_HYPERSPACE_PROMPT_TABLELAND_TABLE,
         marketplace:
           process.env.NEXT_PUBLIC_HYPERSPACE_MARKETPLACE_TABLELAND_TABLE,
+      },
+      litProtocol: {
+        chain: process.env.NEXT_PUBLIC_HYPERSPACE_LIT_PROTOCOL_CHAIN,
       },
     });
   }
@@ -144,4 +151,13 @@ export function chainToSupportedChainMarketplaceTablelandTable(
   chain: Chain | undefined
 ): string | undefined {
   return chainToSupportedChainConfig(chain).tablelandTables.marketplace;
+}
+
+/**
+ * Return lit protocol chain of specified chain if it supported, otherwise return value from default supported chain.
+ */
+export function chainToSupportedChainLitProtocolChain(
+  chain: Chain | undefined
+): string | undefined {
+  return chainToSupportedChainConfig(chain).litProtocol.chain;
 }

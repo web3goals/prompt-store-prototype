@@ -15,8 +15,10 @@ import useToasts from "@/hooks/useToast";
 import { palette } from "@/theme/palette";
 import {
   chainToSupportedChainId,
+  chainToSupportedChainLitProtocolChain,
   chainToSupportedChainPromptContractAddress,
 } from "@/utils/chains";
+import * as LitJsSdk from "@lit-protocol/lit-node-client";
 import { MenuItem, Typography } from "@mui/material";
 import axios from "axios";
 import { Form, Formik } from "formik";
@@ -31,6 +33,8 @@ import {
 } from "wagmi";
 import * as yup from "yup";
 
+const litClient = new LitJsSdk.LitNodeClient([]);
+
 /**
  * Page to create a prompt.
  */
@@ -41,6 +45,9 @@ export default function CreatePrompt() {
   const { handleError } = useError();
   const { uploadJsonToIpfs } = useIpfs();
   const { showToastSuccess, showToastError } = useToasts();
+  const [litNodeClient, setLitNodeClient] = useState<
+    LitJsSdk.LitNodeClient | undefined
+  >();
 
   /**
    * Form states
@@ -86,7 +93,7 @@ export default function CreatePrompt() {
     });
 
   /**
-   * Upload form to ipfs
+   * Submit form values.
    */
   async function submitForm(values: any) {
     try {
@@ -94,6 +101,9 @@ export default function CreatePrompt() {
       // Define params
       const author = address;
       const created = new Date().getTime();
+      // Upload prompt to lit protocol
+      const { encryptedString, encryptedSymmetricKey } =
+        await uploadPromptToLitProtocol(values.prompt);
       // Upload prompt to polybase
       await axios.post(
         "/api/polybase/createPrompt",
@@ -114,6 +124,8 @@ export default function CreatePrompt() {
         title: values.title,
         description: values.description,
         prompt: values.prompt,
+        promptEncryptedString: encryptedString,
+        promptEncryptedSymmetricKey: encryptedSymmetricKey,
         instruction: values.instruction,
       };
       const { uri } = await uploadJsonToIpfs(promptUriData);
@@ -123,6 +135,62 @@ export default function CreatePrompt() {
       setIsFormSubmitting(false);
     }
   }
+
+  /**
+   * Upload prompt to lit protocol.
+   */
+  async function uploadPromptToLitProtocol(prompt: string) {
+    if (!litNodeClient) {
+      throw new Error("Lit Protocol is not ready");
+    }
+    const accessControlConditions = [
+      {
+        contractAddress: chainToSupportedChainPromptContractAddress(chain),
+        standardContractType: "ERC721",
+        chain: chainToSupportedChainLitProtocolChain(chain) || "",
+        method: "balanceOf",
+        parameters: [":userAddress"],
+        returnValueTest: {
+          comparator: ">",
+          value: "0",
+        },
+      },
+    ];
+    const authSig = await LitJsSdk.checkAndSignAuthMessage({
+      chain: chainToSupportedChainLitProtocolChain(chain) || "",
+    });
+    const { encryptedString, symmetricKey } = await LitJsSdk.encryptString(
+      prompt
+    );
+    const encryptedSymmetricKey = await litNodeClient.saveEncryptionKey({
+      accessControlConditions,
+      symmetricKey,
+      authSig,
+      chain: chainToSupportedChainLitProtocolChain(chain) || "",
+    });
+    return {
+      encryptedString: await LitJsSdk.blobToBase64String(encryptedString),
+      encryptedSymmetricKey: LitJsSdk.uint8arrayToString(
+        encryptedSymmetricKey,
+        "base16"
+      ),
+    };
+  }
+
+  /**
+   * Init lit node client
+   */
+  useEffect(() => {
+    if (!litNodeClient) {
+      litClient
+        .connect()
+        .then(() => {
+          setLitNodeClient(litClient);
+        })
+        .catch((error) => handleError(error, true));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   /**
    * Write data to contract if form was submitted
