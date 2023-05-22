@@ -18,6 +18,7 @@ import {
   chainToSupportedChainPromptContractAddress,
 } from "@/utils/chains";
 import { MenuItem, Typography } from "@mui/material";
+import axios from "axios";
 import { Form, Formik } from "formik";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
@@ -90,17 +91,32 @@ export default function CreatePrompt() {
   async function submitForm(values: any) {
     try {
       setIsFormSubmitting(true);
-      const formData: PromptUriDataEntity = {
-        author: address,
-        created: new Date().getTime(),
+      // Define params
+      const author = address;
+      const created = new Date().getTime();
+      // Upload prompt to polybase
+      await axios.post(
+        "/api/polybase/createPrompt",
+        {
+          prompt: values.prompt,
+          author: author,
+          created: created,
+        },
+        {
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+      // Upload prompt uri data to ipfs
+      const promptUriData: PromptUriDataEntity = {
+        author: author,
+        created: created,
         category: values.category,
         title: values.title,
         description: values.description,
         prompt: values.prompt,
         instruction: values.instruction,
       };
-      // Upload updated profile data to ipfs
-      const { uri } = await uploadJsonToIpfs(formData);
+      const { uri } = await uploadJsonToIpfs(promptUriData);
       setSubmittedFormDataUri(uri);
     } catch (error: any) {
       handleError(error, true);

@@ -36,7 +36,7 @@ import Layout from "components/layout";
 import { ethers } from "ethers";
 import { Form, Formik } from "formik";
 import { useRouter } from "next/router";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { stringToAddress, timestampToLocaleDateString } from "utils/converters";
 import { useAccount, useContractRead, useNetwork } from "wagmi";
 import * as yup from "yup";
@@ -276,9 +276,7 @@ function PromptSandbox(props: { promptUriData: PromptUriDataEntity }) {
   }
 
   const { handleError } = useError();
-  const [messages, setMessages] = useState<Message[]>([
-    { role: "system", content: props.promptUriData.prompt || "" },
-  ]);
+  const [messages, setMessages] = useState<Message[] | undefined>();
 
   /**
    * Form states
@@ -297,6 +295,9 @@ function PromptSandbox(props: { promptUriData: PromptUriDataEntity }) {
   async function submitForm(values: any, actions: any) {
     try {
       setIsFormSubmitting(true);
+      if (!messages) {
+        throw new Error("System messages are not defined");
+      }
       const { data } = await axios.post(
         "https://api.openai.com/v1/chat/completions",
         {
@@ -325,6 +326,23 @@ function PromptSandbox(props: { promptUriData: PromptUriDataEntity }) {
     }
   }
 
+  /**
+   * Load prompt from polybase and define messages
+   */
+  useEffect(() => {
+    if (props.promptUriData.author && props.promptUriData.created) {
+      axios
+        .get(
+          `/api/polybase/readPrompt?author=${props.promptUriData.author}&created=${props.promptUriData.created}`
+        )
+        .then(({ data }) =>
+          setMessages([{ role: "system", content: data.data || "" }])
+        )
+        .catch((error) => handleError(error, true));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [props.promptUriData]);
+
   return (
     <Box display="flex" flexDirection="column" alignItems="center">
       <Typography variant="h4" fontWeight={700} textAlign="center">
@@ -333,82 +351,92 @@ function PromptSandbox(props: { promptUriData: PromptUriDataEntity }) {
       <Typography textAlign="center" mt={1}>
         to try the prompt to check out how great it is
       </Typography>
-      {/* Form */}
-      <Formik
-        initialValues={formValues}
-        validationSchema={formValidationSchema}
-        onSubmit={submitForm}
-      >
-        {({ values, errors, touched, handleChange, setValues }) => (
-          <Form
-            style={{
-              width: "100%",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-            }}
+      {messages ? (
+        <>
+          {/* Form */}
+          <Formik
+            initialValues={formValues}
+            validationSchema={formValidationSchema}
+            onSubmit={submitForm}
           >
-            <FormikHelper onChange={(values: any) => setFormValues(values)} />
-            {/* Message input */}
-            <WidgetBox bgcolor={palette.yellow} mt={2}>
-              <WidgetTitle>Message</WidgetTitle>
-              <WidgetInputTextField
-                id="message"
-                name="message"
-                placeholder="How can you help me?"
-                value={values.message}
-                onChange={handleChange}
-                error={touched.message && Boolean(errors.message)}
-                helperText={touched.message && errors.message}
-                disabled={isFormSubmitting}
-                multiline
-                maxRows={4}
-                sx={{ width: 1 }}
-              />
-            </WidgetBox>
-            {/* Submit button */}
-            <LargeLoadingButton
-              loading={isFormSubmitting}
-              variant="outlined"
-              type="submit"
-              disabled={isFormSubmitting}
-              sx={{ mt: 2 }}
-            >
-              Post
-            </LargeLoadingButton>
-          </Form>
-        )}
-      </Formik>
-      {/* Messages */}
-      <Box width={1} mt={2}>
-        {messages
-          .slice(0)
-          .reverse()
-          .map((message, index) => {
-            if (message.role === "system") {
-              return <Box key={index} />;
-            }
-            return (
-              <CardBox key={index} sx={{ mt: 2 }}>
-                <Stack direction="row" spacing={2}>
-                  <Avatar
-                    sx={{
-                      background:
-                        message.role === "assistant"
-                          ? palette.blue
-                          : palette.yellow,
-                    }}
-                  >
-                    <Typography fontSize={18}>
-                      {message.role === "assistant" ? "🤖" : "👤"}
-                    </Typography>
-                  </Avatar>
-                  <Typography>{message.content}</Typography>
-                </Stack>
-              </CardBox>
-            );
-          })}
-      </Box>
+            {({ values, errors, touched, handleChange, setValues }) => (
+              <Form
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                }}
+              >
+                <FormikHelper
+                  onChange={(values: any) => setFormValues(values)}
+                />
+                {/* Message input */}
+                <WidgetBox bgcolor={palette.yellow} mt={2}>
+                  <WidgetTitle>Message</WidgetTitle>
+                  <WidgetInputTextField
+                    id="message"
+                    name="message"
+                    placeholder="How can you help me?"
+                    value={values.message}
+                    onChange={handleChange}
+                    error={touched.message && Boolean(errors.message)}
+                    helperText={touched.message && errors.message}
+                    disabled={isFormSubmitting}
+                    multiline
+                    maxRows={4}
+                    sx={{ width: 1 }}
+                  />
+                </WidgetBox>
+                {/* Submit button */}
+                <LargeLoadingButton
+                  loading={isFormSubmitting}
+                  variant="outlined"
+                  type="submit"
+                  disabled={isFormSubmitting}
+                  sx={{ mt: 2 }}
+                >
+                  Post
+                </LargeLoadingButton>
+              </Form>
+            )}
+          </Formik>
+          {/* Messages */}
+          <Box width={1} mt={2}>
+            {messages
+              .slice(0)
+              .reverse()
+              .map((message, index) => {
+                if (message.role === "system") {
+                  return <Box key={index} />;
+                }
+                return (
+                  <CardBox key={index} sx={{ mt: 2 }}>
+                    <Stack direction="row" spacing={2}>
+                      <Avatar
+                        sx={{
+                          background:
+                            message.role === "assistant"
+                              ? palette.blue
+                              : palette.yellow,
+                        }}
+                      >
+                        <Typography fontSize={18}>
+                          {message.role === "assistant" ? "🤖" : "👤"}
+                        </Typography>
+                      </Avatar>
+                      <Typography>{message.content}</Typography>
+                    </Stack>
+                  </CardBox>
+                );
+              })}
+          </Box>
+        </>
+      ) : (
+        <>
+          <FullWidthSkeleton />
+        </>
+      )}
     </Box>
   );
 }
