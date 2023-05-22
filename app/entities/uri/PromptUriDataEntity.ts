@@ -4,6 +4,6 @@ export default interface PromptUriDataEntity {
   category?: string;
   title?: string;
   description?: string;
-  prompt?: string;
+  prompt?: string; // TODO: Replace with using polybase and lit protocol
   instruction?: string;
 }

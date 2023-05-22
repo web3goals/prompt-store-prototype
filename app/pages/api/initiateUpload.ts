@@ -1,6 +1,9 @@
 import { ProtocolEnum, SpheronClient } from "@spheron/storage";
 import type { NextApiRequest, NextApiResponse } from "next";
 
+/**
+ * API to get a token for uploading data from browser to Spheron Storage.
+ */
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
