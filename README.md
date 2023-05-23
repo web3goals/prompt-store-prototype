@@ -2,7 +2,9 @@
 
 Web3 marketplace of prompts for GPT, ChatGPT, Bard and other LLM
 
-🔗 [Application](https://prompt-store-app.vercel.app/)
+## 🔗 Application
+
+https://prompt-store-app.vercel.app/
 
 ## ✨ Inspiration
 
