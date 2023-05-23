@@ -291,7 +291,7 @@ export default function AccountEditProfileForm(props: {
             id="email"
             name="email"
             label="Email"
-            placeholder="alice@web3goals.space"
+            placeholder="alice@domain.io"
             value={values.email}
             onChange={handleChange}
             error={touched.email && Boolean(errors.email)}
@@ -305,7 +305,7 @@ export default function AccountEditProfileForm(props: {
             id="website"
             name="website"
             label="Website"
-            placeholder="https://web3goals.space"
+            placeholder="https://domain.io"
             value={values.website}
             onChange={handleChange}
             error={touched.website && Boolean(errors.website)}
